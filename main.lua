@@ -254,7 +254,7 @@ task.spawn(function()
     local MenuTitle = Instance.new("TextLabel")
     MenuTitle.Size = UDim2.new(1, 0, 0, 25)
     MenuTitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MenuTitle.Text = "🛡️ 自作盾テスト・管理メニュー"
+    MenuTitle.Text = "管理メニュー"
     MenuTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     MenuTitle.TextSize = 14
     MenuTitle.Parent = DebugMenuFrame
