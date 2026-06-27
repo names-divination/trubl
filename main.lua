@@ -1,3 +1,165 @@
+-- ====================================================================
+-- 【追加機能】独自管理メニュー（画面最上部タップで開閉・サイズ変更・移動切替）
+-- ====================================================================
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+    if not PlayerGui then return end
+    
+    -- 元のUI（TRUBL）が出現するのを裏でじっと待つ
+    local ScreenGui = PlayerGui:WaitForChild("TRUBL", 20)
+    if not ScreenGui then return end
+    
+    local IslandDropDown = nil
+    while not IslandDropDown do
+        IslandDropDown = ScreenGui:FindFirstChild("IslandDropDown")
+        task.wait(0.1)
+    end
+
+    -- 1. 画面最上部に配置する透明な開閉ボタン
+    local TopTriggerButton = Instance.new("TextButton")
+    TopTriggerButton.Name = "TopTriggerButton"
+    TopTriggerButton.Size = UDim2.new(1, 0, 0, 30)
+    TopTriggerButton.Position = UDim2.new(0, 0, 0, 0)
+    TopTriggerButton.BackgroundTransparency = 0.8
+    TopTriggerButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    TopTriggerButton.Text = "=== [ CLICK TO TOGGLE DEBUG MENU ] ==="
+    TopTriggerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TopTriggerButton.TextSize = 12
+    TopTriggerButton.ZIndex = 10000
+    TopTriggerButton.Parent = ScreenGui
+
+    -- 2. 独自管理GUIのメイン枠
+    local DebugMenuFrame = Instance.new("Frame")
+    DebugMenuFrame.Name = "DebugMenuFrame"
+    DebugMenuFrame.Size = UDim2.new(0, 250, 0, 200)
+    DebugMenuFrame.Position = UDim2.new(0.5, -125, 0, -250)
+    DebugMenuFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    DebugMenuFrame.BorderSizePixel = 2
+    DebugMenuFrame.BorderColor3 = Color3.fromRGB(200, 0, 0)
+    DebugMenuFrame.ZIndex = 10000
+    DebugMenuFrame.Parent = ScreenGui
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Parent = DebugMenuFrame
+
+    local MenuTitle = Instance.new("TextLabel")
+    MenuTitle.Size = UDim2.new(1, 0, 0, 25)
+    MenuTitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MenuTitle.Text = "🛡️ 自作盾テスト・管理メニュー"
+    MenuTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MenuTitle.TextSize = 14
+    MenuTitle.Parent = DebugMenuFrame
+
+    _G.CanMoveUI = true
+    local currentSizeScale = 1.0
+
+    -- 移動切り替えトグルボタン
+    local MoveToggleButton = Instance.new("TextButton")
+    MoveToggleButton.Size = UDim2.new(0.9, 0, 0, 30)
+    MoveToggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+    MoveToggleButton.Text = "UIドラッグ移動: ON"
+    MoveToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MoveToggleButton.Parent = DebugMenuFrame
+
+    MoveToggleButton.MouseButton1Click:Connect(function()
+        _G.CanMoveUI = not _G.CanMoveUI
+        if _G.CanMoveUI then
+            MoveToggleButton.Text = "UIドラッグ移動: ON"
+            MoveToggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+        else
+            MoveToggleButton.Text = "UIドラッグ移動: OFF"
+            MoveToggleButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+        end
+    end)
+
+    -- サイズアップ
+    local SizeUpButton = Instance.new("TextButton")
+    SizeUpButton.Size = UDim2.new(0.9, 0, 0, 30)
+    SizeUpButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    SizeUpButton.Text = "サイズ拡大 (+10%)"
+    SizeUpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SizeUpButton.Parent = DebugMenuFrame
+
+    -- サイズダウン
+    local SizeDownButton = Instance.new("TextButton")
+    SizeDownButton.Size = UDim2.new(0.9, 0, 0, 30)
+    SizeDownButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    SizeDownButton.Text = "サイズ縮小 (-10%)"
+    SizeDownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SizeDownButton.Parent = DebugMenuFrame
+
+    local SizeLabel = Instance.new("TextLabel")
+    SizeLabel.Size = UDim2.new(0.9, 0, 0, 20)
+    SizeLabel.BackgroundTransparency = 1
+    SizeLabel.Text = "現在のサイズ: 100%"
+    SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SizeLabel.Parent = DebugMenuFrame
+
+    local function updateUISize(scale)
+        currentSizeScale = math.clamp(scale, 0.5, 2.0)
+        SizeLabel.Text = "現在のサイズ: " .. math.floor(currentSizeScale * 100) .. "%"
+        if IslandDropDown then
+            IslandDropDown.Size = UDim2.new(0, 220 * currentSizeScale, 0, 330 * currentSizeScale)
+        end
+    end
+
+    SizeUpButton.MouseButton1Click:Connect(function() updateUISize(currentSizeScale + 0.1) end)
+    SizeDownButton.MouseButton1Click:Connect(function() updateUISize(currentSizeScale - 0.1) end)
+
+    -- 開閉アニメーション
+    local menuOpen = false
+    TopTriggerButton.MouseButton1Click:Connect(function()
+        menuOpen = not menuOpen
+        local targetY = menuOpen and 35 or -250
+        TweenService:Create(DebugMenuFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -125, 0, targetY)}):Play()
+    end)
+
+    -- ドラッグ移動ロジック
+    local dragging, dragInput, dragStart, startPos
+
+    local function updateDrag(input)
+        local delta = input.Position - dragStart
+        IslandDropDown.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+
+    IslandDropDown.InputBegan:Connect(function(input)
+        if not _G.CanMoveUI then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = IslandDropDown.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    IslandDropDown.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            updateDrag(input)
+        end
+    end)
+end)
+-- ====================================================================
 -- // [1] SERVICES //
 local Players        = game:GetService("Players")
 local RunService     = game:GetService("RunService")
