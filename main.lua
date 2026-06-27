@@ -1,5 +1,5 @@
 -- ====================================================================
--- 【追加機能】独自管理メニュー（本体コードの一番上に貼るだけ）
+-- 【追加機能】独自管理メニュー（高級黒金＆本体UI自動デザイン変更版）
 -- ====================================================================
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -19,88 +19,154 @@ task.spawn(function()
         task.wait(0.1)
     end
 
-    -- 1. 開閉ボタン
+    -- テーマカラー（漆黒とゴールド）
+    local BG_COLOR = Color3.fromRGB(20, 20, 20)
+    local FRAME_COLOR = Color3.fromRGB(30, 30, 30)
+    local ACCENT_GOLD = Color3.fromRGB(212, 175, 55)
+    local TEXT_WHITE = Color3.fromRGB(240, 240, 240)
+
+    -- ================================================================
+    -- ✨ 【めんどくささゼロ】本体UIを自動で黒金化するロジック
+    -- ================================================================
+    local function applyGoldTheme(instance)
+        -- 背景色があるオブジェクトをダーク系に染める
+        if instance:IsA("Frame") or instance:IsA("ScrollingFrame") then
+            instance.BackgroundColor3 = FRAME_COLOR
+            if instance:IsA("Frame") and instance.BorderSizePixel > 0 then
+                instance.BorderColor3 = ACCENT_GOLD
+            end
+        elseif instance:IsA("TextButton") or instance:IsA("TextBox") then
+            instance.BackgroundColor3 = BG_COLOR
+            if instance.BorderSizePixel > 0 then
+                instance.BorderColor3 = ACCENT_GOLD
+            end
+            instance.TextColor3 = TEXT_WHITE
+            instance.Font = Enum.Font.GothamSemibold
+        elseif instance:IsA("TextLabel") then
+            instance.TextColor3 = TEXT_WHITE
+            instance.Font = Enum.Font.GothamSemibold
+            if instance.BackgroundTransparency < 1 then
+                instance.BackgroundColor3 = BG_COLOR
+            end
+        end
+        
+        -- 今風の滑らかな角丸（UICorner）をボタンやフレームに自動追加
+        if (instance:IsA("Frame") or instance:IsA("TextButton")) and not instance:FindFirstChildOfClass("UICorner") then
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 4)
+            corner.Parent = instance
+        end
+    end
+
+    -- 元のUIの中身をすべて自動スキャンして黒金化を適用
+    for _, desc in ipairs(IslandDropDown:GetDescendants()) do
+        applyGoldTheme(desc)
+    end
+    -- 後から追加されるパーツも逃さず自動適用
+    IslandDropDown.DescendantAdded:Connect(applyGoldTheme)
+    -- ================================================================
+
+    -- 1. 開閉トリガー（画面上部の細いバー）
     local TopTriggerButton = Instance.new("TextButton")
     TopTriggerButton.Name = "TopTriggerButton"
-    TopTriggerButton.Size = UDim2.new(1, 0, 0, 30)
+    TopTriggerButton.Size = UDim2.new(1, 0, 0, 25)
     TopTriggerButton.Position = UDim2.new(0, 0, 0, 0)
-    TopTriggerButton.BackgroundTransparency = 0.8
-    TopTriggerButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    TopTriggerButton.Text = "=== [ CLICK TO TOGGLE DEBUG MENU ] ==="
-    TopTriggerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TopTriggerButton.TextSize = 12
+    TopTriggerButton.BackgroundColor3 = BG_COLOR
+    TopTriggerButton.BackgroundTransparency = 0.3
+    TopTriggerButton.BorderSizePixel = 0
+    TopTriggerButton.Text = "⚡ MANAGEMENT MENU ⚡"
+    TopTriggerButton.TextColor3 = ACCENT_GOLD
+    TopTriggerButton.TextSize = 11
+    TopTriggerButton.Font = Enum.Font.GothamBold
     TopTriggerButton.ZIndex = 10000
     TopTriggerButton.Parent = ScreenGui
 
-    -- 2. 独自管理メニューのメイン枠
+    -- 2. メインフレーム（管理メニュー本体）
     local DebugMenuFrame = Instance.new("Frame")
     DebugMenuFrame.Name = "DebugMenuFrame"
-    DebugMenuFrame.Size = UDim2.new(0, 250, 0, 200)
-    DebugMenuFrame.Position = UDim2.new(0.5, -125, 0, -250)
-    DebugMenuFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    DebugMenuFrame.BorderSizePixel = 2
-    DebugMenuFrame.BorderColor3 = Color3.fromRGB(200, 0, 0)
+    DebugMenuFrame.Size = UDim2.new(0, 260, 0, 210)
+    DebugMenuFrame.Position = UDim2.new(0.5, -130, 0, -260)
+    DebugMenuFrame.BackgroundColor3 = FRAME_COLOR
+    DebugMenuFrame.BorderSizePixel = 1
+    DebugMenuFrame.BorderColor3 = ACCENT_GOLD
     DebugMenuFrame.ZIndex = 10000
     DebugMenuFrame.Parent = ScreenGui
 
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 6)
+    UICorner.Parent = DebugMenuFrame
+
     local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Padding = UDim.new(0, 6)
+    UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Parent = DebugMenuFrame
 
+    -- タイトルバー
     local MenuTitle = Instance.new("TextLabel")
-    MenuTitle.Size = UDim2.new(1, 0, 0, 25)
-    MenuTitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MenuTitle.Text = "🛡️ 自作盾テスト・管理メニュー"
-    MenuTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MenuTitle.TextSize = 14
+    MenuTitle.Size = UDim2.new(1, 0, 0, 30)
+    MenuTitle.BackgroundColor3 = BG_COLOR
+    MenuTitle.BorderSizePixel = 0
+    MenuTitle.Text = "  👑 PREMIUM CONTROL"
+    MenuTitle.TextColor3 = TEXT_WHITE
+    MenuTitle.TextXAlignment = Enum.TextXAlignment.Left
+    MenuTitle.TextSize = 13
+    MenuTitle.Font = Enum.Font.GothamBold
     MenuTitle.Parent = DebugMenuFrame
+    
+    local TitleCorner = Instance.new("UICorner")
+    TitleCorner.CornerRadius = UDim.new(0, 6)
+    TitleCorner.Parent = MenuTitle
 
     _G.CanMoveUI = true
     local currentSizeScale = 1.0
 
+    -- ボタン共通スタイル化関数
+    local function styleButton(btn, text, color)
+        btn.Size = UDim2.new(0.92, 0, 0, 32)
+        btn.BackgroundColor3 = BG_COLOR
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = color
+        btn.Text = text
+        btn.TextColor3 = TEXT_WHITE
+        btn.TextSize = 12
+        btn.Font = Enum.Font.GothamSemibold
+        btn.Parent = DebugMenuFrame
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    end
+
     local MoveToggleButton = Instance.new("TextButton")
-    MoveToggleButton.Size = UDim2.new(0.9, 0, 0, 30)
-    MoveToggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-    MoveToggleButton.Text = "UIドラッグ移動: ON"
-    MoveToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MoveToggleButton.Parent = DebugMenuFrame
+    styleButton(MoveToggleButton, "UI DRAG: ON", ACCENT_GOLD)
 
     MoveToggleButton.MouseButton1Click:Connect(function()
         _G.CanMoveUI = not _G.CanMoveUI
         if _G.CanMoveUI then
-            MoveToggleButton.Text = "UIドラッグ移動: ON"
-            MoveToggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+            MoveToggleButton.Text = "UI DRAG: ON"
+            MoveToggleButton.BorderColor3 = ACCENT_GOLD
         else
-            MoveToggleButton.Text = "UIドラッグ移動: OFF"
-            MoveToggleButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+            MoveToggleButton.Text = "UI DRAG: OFF"
+            MoveToggleButton.BorderColor3 = Color3.fromRGB(150, 50, 50)
         end
     end)
 
     local SizeUpButton = Instance.new("TextButton")
-    SizeUpButton.Size = UDim2.new(0.9, 0, 0, 30)
-    SizeUpButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    SizeUpButton.Text = "サイズ拡大 (+10%)"
-    SizeUpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SizeUpButton.Parent = DebugMenuFrame
+    styleButton(SizeUpButton, "SIZE +10%", Color3.fromRGB(60, 60, 60))
 
     local SizeDownButton = Instance.new("TextButton")
-    SizeDownButton.Size = UDim2.new(0.9, 0, 0, 30)
-    SizeDownButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    SizeDownButton.Text = "サイズ縮小 (-10%)"
-    SizeDownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SizeDownButton.Parent = DebugMenuFrame
+    styleButton(SizeDownButton, "SIZE -10%", Color3.fromRGB(60, 60, 60))
 
     local SizeLabel = Instance.new("TextLabel")
     SizeLabel.Size = UDim2.new(0.9, 0, 0, 20)
     SizeLabel.BackgroundTransparency = 1
-    SizeLabel.Text = "現在のサイズ: 100%"
-    SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SizeLabel.Text = "SCALE: 100%"
+    SizeLabel.TextColor3 = ACCENT_GOLD
+    SizeLabel.TextSize = 11
+    SizeLabel.Font = Enum.Font.Gotham
     SizeLabel.Parent = DebugMenuFrame
 
     local function updateUISize(scale)
         currentSizeScale = math.clamp(scale, 0.5, 2.0)
-        SizeLabel.Text = "現在のサイズ: " .. math.floor(currentSizeScale * 100) .. "%"
+        SizeLabel.Text = "SCALE: " .. math.floor(currentSizeScale * 100) .. "%"
         if IslandDropDown then
             IslandDropDown.Size = UDim2.new(0, 220 * currentSizeScale, 0, 330 * currentSizeScale)
         end
@@ -112,48 +178,27 @@ task.spawn(function()
     local menuOpen = false
     TopTriggerButton.MouseButton1Click:Connect(function()
         menuOpen = not menuOpen
-        local targetY = menuOpen and 35 or -250
-        TweenService:Create(DebugMenuFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -125, 0, targetY)}):Play()
+        local targetY = menuOpen and 35 or -260
+        TweenService:Create(DebugMenuFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -130, 0, targetY)}):Play()
     end)
 
     -- ドラッグ移動ロジック
     local dragging, dragInput, dragStart, startPos
-
     local function updateDrag(input)
         local delta = input.Position - dragStart
-        IslandDropDown.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
+        IslandDropDown.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-
     IslandDropDown.InputBegan:Connect(function(input)
         if not _G.CanMoveUI then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = IslandDropDown.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
+            dragging = true; dragStart = input.Position; startPos = IslandDropDown.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
         end
     end)
-
-    IslandDropDown.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            updateDrag(input)
-        end
-    end)
+    IslandDropDown.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+    UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then updateDrag(input) end end)
 end)
+-- ====================================================================
 -- ====================================================================
 -- ====================================================================
 -- 【追加機能】独自管理メニュー（画面最上部タップで開閉・サイズ変更・移動切替）
