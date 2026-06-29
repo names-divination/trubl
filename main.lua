@@ -3061,10 +3061,10 @@ task.spawn(function()
     end)
 
     -- 6. 現在ドラッグ可能かどうか変更可能なボタン
-    local DragButtonToggle = Instance.new("TextButton")
-    styleButton(DragButtonToggle, "BUTTON DRAGGING: ALLOWED", ACCENT_GOLD)
-    DragButtonToggle.MouseButton1Click:Connect(function()
-        _G_CanDragButtons = not _G_CanDragButtons
+　　local DragButtonToggle = Instance.new("TextButton")
+　　styleButton(DragButtonToggle, "BUTTON DRAGGING: ALLOWED", ACCENT_GOLD)
+　　DragButtonToggle.MouseButton1Click:Connect(function()
+　　_G.CanDragButtons = not _G.CanDragButtons
         if _G_CanDragButtons then
             DragButtonToggle.Text = "BUTTON DRAGGING: ALLOWED"
             DragButtonToggle.BorderColor3 = ACCENT_GOLD
