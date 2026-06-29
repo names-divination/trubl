@@ -2902,3 +2902,80 @@ local function buildCircleButtons()
 end
 
 buildCircleButtons()
+-- ====================================================================
+-- MAXIMUM PREMIUM MAINTENANCE MENU SYSTEM (NO EMOJI VERSION)
+-- ====================================================================
+task.spawn(function()
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
+    local HttpService = game:GetService("HttpService")
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+    
+    local ScreenGui = PlayerGui:WaitForChild("TRUBL", 20)
+    local IslandDropDown = ScreenGui and ScreenGui:WaitForChild("IslandDropDown", 10)
+    if not IslandDropDown then return end
+
+    local BG_COLOR = Color3.fromRGB(20, 20, 20)
+    local FRAME_COLOR = Color3.fromRGB(30, 30, 30)
+    local ACCENT_GOLD = Color3.fromRGB(212, 175, 55)
+    local TEXT_WHITE = Color3.fromRGB(240, 240, 240)
+    
+    -- 1. Top Trigger Button
+    local TopMenuButton = Instance.new("TextButton")
+    TopMenuButton.Name = "TopMenuButton"; TopMenuButton.Size = UDim2.new(1, 0, 0, 26)
+    TopMenuButton.BackgroundColor3 = BG_COLOR; TopMenuButton.BackgroundTransparency = 0.2; TopMenuButton.BorderSizePixel = 0
+    TopMenuButton.Text = "TRUBL MANAGEMENT PANEL"; TopMenuButton.TextColor3 = ACCENT_GOLD
+    TopMenuButton.TextSize = 11; TopMenuButton.Font = Enum.Font.GothamBold; TopMenuButton.ZIndex = 10005; TopMenuButton.Parent = ScreenGui
+    
+    -- 2. Main Maintenance Frame
+    local MaintenanceFrame = Instance.new("Frame")
+    MaintenanceFrame.Name = "MaintenanceFrame"; MaintenanceFrame.Size = UDim2.new(0, 280, 0, 180); MaintenanceFrame.Position = UDim2.new(0.5, -140, 0, -300)
+    MaintenanceFrame.BackgroundColor3 = FRAME_COLOR; MaintenanceFrame.BorderSizePixel = 1; MaintenanceFrame.BorderColor3 = ACCENT_GOLD; MaintenanceFrame.ZIndex = 10000; MaintenanceFrame.Parent = ScreenGui
+    Instance.new("UICorner", MaintenanceFrame).CornerRadius = UDim.new(0, 6)
+    
+    local Layout = Instance.new("UIListLayout"); Layout.Padding = UDim.new(0, 6); Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Layout.SortOrder = Enum.SortOrder.LayoutOrder; Layout.Parent = MaintenanceFrame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 32); Title.BackgroundColor3 = BG_COLOR; Title.BorderSizePixel = 0; Title.Text = "  PRE-GAME MAINTENANCE"; Title.TextColor3 = TEXT_WHITE; Title.TextXAlignment = Enum.TextXAlignment.Left; Title.TextSize = 12; Title.Font = Enum.Font.GothamBold; Title.Parent = MaintenanceFrame
+    Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 6)
+
+    local function styleButton(btn, text, color)
+        btn.Size = UDim2.new(0.92, 0, 0, 32); btn.BackgroundColor3 = BG_COLOR; btn.BorderSizePixel = 1; btn.BorderColor3 = color
+        btn.Text = text; btn.TextColor3 = TEXT_WHITE; btn.TextSize = 12; btn.Font = Enum.Font.GothamSemibold; btn.Parent = MaintenanceFrame
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    end
+
+    -- 3. Toggle Buttons Visibility (Anti-Misclick)
+    local UIButtonToggle = Instance.new("TextButton")
+    styleButton(UIButtonToggle, "ROUND BUTTONS: VISIBLE", ACCENT_GOLD)
+    UIButtonToggle.MouseButton1Click:Connect(function()
+        IslandDropDown.Visible = not IslandDropDown.Visible
+        if IslandDropDown.Visible then
+            UIButtonToggle.Text = "ROUND BUTTONS: VISIBLE"; UIButtonToggle.BorderColor3 = ACCENT_GOLD
+        else
+            UIButtonToggle.Text = "ROUND BUTTONS: HIDDEN (LOCKED)"; UIButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50)
+        end
+    end)
+
+    -- 4. Toggle Button Drag Lock
+    local _G_CanDragButtons = true
+    local DragButtonToggle = Instance.new("TextButton")
+    styleButton(DragButtonToggle, "BUTTON DRAGGING: ALLOWED", ACCENT_GOLD)
+    DragButtonToggle.MouseButton1Click:Connect(function()
+        _G_CanDragButtons = not _G_CanDragButtons
+        if _G_CanDragButtons then
+            DragButtonToggle.Text = "BUTTON DRAGGING: ALLOWED"; DragButtonToggle.BorderColor3 = ACCENT_GOLD
+        else
+            DragButtonToggle.Text = "BUTTON DRAGGING: LOCKED"; DragButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50) end
+    end)
+
+    -- 5. Speed Adjust TextBox
+    local SpeedInputFrame = Instance.new("Frame")
+    SpeedInputFrame.Size = UDim2.new(0.92, 0, 0, 32); SpeedInputFrame.BackgroundColor3 = BG_COLOR; SpeedInputFrame.BorderSizePixel = 0; SpeedInputFrame.Parent = MaintenanceFrame
+    Instance.new("UICorner", SpeedInputFrame).CornerRadius = UDim.new(0, 4)
+    
+    local SpeedLabel = Instance.new("TextLabel")
+    SpeedLabel.Size = UDim2.new(0.6, 0, 1, 0); SpeedLabel.BackgroundTransparency = 1; SpeedLabel.Text = " WalkSpeed Adjust:"; SpeedLabel.TextColor3 = TEXT_WHITE; SpeedLabel.TextSize = 11; SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left; SpeedLabel.Font = Enum.Font.Gotham; SpeedLabel.Parent = SpeedInputFrame
+    
+    local SpeedBox = Instance.new("TextBox")
+    SpeedBox.Size = UDim2.new(0.35, 0, 0.8, 0); SpeedBox.Position = UDim2.new(0.6, 0, 0.1, 0); SpeedBox.BackgroundColor3 = FRAME_COLOR; SpeedBox.
