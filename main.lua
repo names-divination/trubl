@@ -3065,7 +3065,7 @@ task.spawn(function()
 　　styleButton(DragButtonToggle, "BUTTON DRAGGING: ALLOWED", ACCENT_GOLD)
 　　DragButtonToggle.MouseButton1Click:Connect(function()
 　　_G.CanDragButtons = not _G.CanDragButtons
-        if _G_CanDragButtons then
+        if _G.CanDragButtons then
             DragButtonToggle.Text = "BUTTON DRAGGING: ALLOWED"
             DragButtonToggle.BorderColor3 = ACCENT_GOLD
         else
