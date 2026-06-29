@@ -2903,15 +2903,17 @@ end
 
 buildCircleButtons()
 -- ====================================================================
--- MAXIMUM PREMIUM MAINTENANCE MENU SYSTEM (NO EMOJI VERSION)
+-- MAXIMUM PREMIUM MAINTENANCE PANEL INTEGRATED SYSTEM (CLEANED)
 -- ====================================================================
 task.spawn(function()
     local TweenService = game:GetService("TweenService")
     local UserInputService = game:GetService("UserInputService")
     local HttpService = game:GetService("HttpService")
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+    local RunService = game:GetService("RunService")
     
-    local ScreenGui = PlayerGui:WaitForChild("TRUBL", 20)
+    local LocalPlayer = Players.LocalPlayer
+    local PlayerGui = LocalPlayer:WaitForChild("LocalPlayerGui", 10) or LocalPlayer:WaitForChild("PlayerGui", 10)
+    local ScreenGui = PlayerGui and PlayerGui:WaitForChild("TRUBL", 20)
     local IslandDropDown = ScreenGui and ScreenGui:WaitForChild("IslandDropDown", 10)
     if not IslandDropDown then return end
 
@@ -2920,62 +2922,288 @@ task.spawn(function()
     local ACCENT_GOLD = Color3.fromRGB(212, 175, 55)
     local TEXT_WHITE = Color3.fromRGB(240, 240, 240)
     
-    -- 1. Top Trigger Button
-    local TopMenuButton = Instance.new("TextButton")
-    TopMenuButton.Name = "TopMenuButton"; TopMenuButton.Size = UDim2.new(1, 0, 0, 26)
-    TopMenuButton.BackgroundColor3 = BG_COLOR; TopMenuButton.BackgroundTransparency = 0.2; TopMenuButton.BorderSizePixel = 0
-    TopMenuButton.Text = "TRUBL MANAGEMENT PANEL"; TopMenuButton.TextColor3 = ACCENT_GOLD
-    TopMenuButton.TextSize = 11; TopMenuButton.Font = Enum.Font.GothamBold; TopMenuButton.ZIndex = 10005; TopMenuButton.Parent = ScreenGui
+    _G.CustomNormalSpeed = 59
+    _G.CustomCarrySpeed = 29
     
-    -- 2. Main Maintenance Frame
+    -- 1. 上ボタン（管理パネルの表示/非表示を切り替えるボタン）を画面上部に配置
+    local TopMenuButton = Instance.new("TextButton")
+    TopMenuButton.Name = "TopMenuButton"
+    TopMenuButton.Size = UDim2.new(0, 200, 0, 32)
+    TopMenuButton.Position = UDim2.new(1, -210, 0, 10)
+    TopMenuButton.BackgroundColor3 = BG_COLOR
+    TopMenuButton.BackgroundTransparency = 0.2
+    TopMenuButton.BorderSizePixel = 1
+    TopMenuButton.BorderColor3 = ACCENT_GOLD
+    TopMenuButton.Text = "TRUBL MANAGEMENT PANEL"
+    TopMenuButton.TextColor3 = ACCENT_GOLD
+    TopMenuButton.TextSize = 11
+    TopMenuButton.Font = Enum.Font.GothamBold
+    TopMenuButton.ZIndex = 10005
+    TopMenuButton.Parent = ScreenGui
+    Instance.new("UICorner", TopMenuButton).CornerRadius = UDim.new(0, 4)
+    
+    -- 2. 管理パネル（設定パネル）の生成
     local MaintenanceFrame = Instance.new("Frame")
-    MaintenanceFrame.Name = "MaintenanceFrame"; MaintenanceFrame.Size = UDim2.new(0, 280, 0, 180); MaintenanceFrame.Position = UDim2.new(0.5, -140, 0, -300)
-    MaintenanceFrame.BackgroundColor3 = FRAME_COLOR; MaintenanceFrame.BorderSizePixel = 1; MaintenanceFrame.BorderColor3 = ACCENT_GOLD; MaintenanceFrame.ZIndex = 10000; MaintenanceFrame.Parent = ScreenGui
+    MaintenanceFrame.Name = "MaintenanceFrame"
+    MaintenanceFrame.Size = UDim2.new(0, 280, 0, 320)
+    MaintenanceFrame.Position = UDim2.new(1, -290, 0, 45)
+    MaintenanceFrame.BackgroundColor3 = FRAME_COLOR
+    MaintenanceFrame.BorderSizePixel = 1
+    MaintenanceFrame.BorderColor3 = ACCENT_GOLD
+    MaintenanceFrame.ZIndex = 10000
+    MaintenanceFrame.Parent = ScreenGui
     Instance.new("UICorner", MaintenanceFrame).CornerRadius = UDim.new(0, 6)
     
-    local Layout = Instance.new("UIListLayout"); Layout.Padding = UDim.new(0, 6); Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Layout.SortOrder = Enum.SortOrder.LayoutOrder; Layout.Parent = MaintenanceFrame
+    -- 管理パネルをドラッグして動かせるようにする処理
+    local draggingPanel, panelDragStart, panelStartPos
+    MaintenanceFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingPanel = true
+            panelDragStart = input.Position
+            StartPos = MaintenanceFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    draggingPanel = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if draggingPanel then
+                local delta = input.Position - panelDragStart
+                MaintenanceFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+            end
+        end
+    end)
+    
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 6)
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Parent = MaintenanceFrame
     
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 32); Title.BackgroundColor3 = BG_COLOR; Title.BorderSizePixel = 0; Title.Text = "  PRE-GAME MAINTENANCE"; Title.TextColor3 = TEXT_WHITE; Title.TextXAlignment = Enum.TextXAlignment.Left; Title.TextSize = 12; Title.Font = Enum.Font.GothamBold; Title.Parent = MaintenanceFrame
+    Title.Size = UDim2.new(1, 0, 0, 32)
+    Title.BackgroundColor3 = BG_COLOR
+    Title.BorderSizePixel = 0
+    Title.Text = "  PRE-GAME MAINTENANCE"
+    Title.TextColor3 = TEXT_WHITE
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextSize = 12
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MaintenanceFrame
     Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 6)
 
     local function styleButton(btn, text, color)
-        btn.Size = UDim2.new(0.92, 0, 0, 32); btn.BackgroundColor3 = BG_COLOR; btn.BorderSizePixel = 1; btn.BorderColor3 = color
-        btn.Text = text; btn.TextColor3 = TEXT_WHITE; btn.TextSize = 12; btn.Font = Enum.Font.GothamSemibold; btn.Parent = MaintenanceFrame
+        btn.Size = UDim2.new(0.92, 0, 0, 32)
+        btn.BackgroundColor3 = BG_COLOR
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = color
+        btn.Text = text
+        btn.TextColor3 = TEXT_WHITE
+        btn.TextSize = 12
+        btn.Font = Enum.Font.GothamSemibold
+        btn.Parent = MaintenanceFrame
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
     end
 
-    -- 3. Toggle Buttons Visibility (Anti-Misclick)
+    -- 3. 管理パネル自体の表示/非表示を切り替えるボタン
+    local PanelButtonVisibility = Instance.new("TextButton")
+    styleButton(PanelButtonVisibility, "PANEL: VISIBLE", ACCENT_GOLD)
+    PanelButtonVisibility.MouseButton1Click:Connect(function()
+        MaintenanceFrame.Visible = not MaintenanceFrame.Visible
+        if MaintenanceFrame.Visible then
+            PanelButtonVisibility.Text = "PANEL: VISIBLE"
+            PanelButtonVisibility.BorderColor3 = ACCENT_GOLD
+        else
+            PanelButtonVisibility.Text = "PANEL: HIDDEN"
+            PanelButtonVisibility.BorderColor3 = Color3.fromRGB(150, 50, 50)
+        end
+    end)
+
+    -- 4. ボタン（機能オンオフのデュエル時に使うボタン）の表示/非表示切り替えボタン
     local UIButtonToggle = Instance.new("TextButton")
     styleButton(UIButtonToggle, "ROUND BUTTONS: VISIBLE", ACCENT_GOLD)
     UIButtonToggle.MouseButton1Click:Connect(function()
         IslandDropDown.Visible = not IslandDropDown.Visible
         if IslandDropDown.Visible then
-            UIButtonToggle.Text = "ROUND BUTTONS: VISIBLE"; UIButtonToggle.BorderColor3 = ACCENT_GOLD
+            UIButtonToggle.Text = "ROUND BUTTONS: VISIBLE"
+            UIButtonToggle.BorderColor3 = ACCENT_GOLD
         else
-            UIButtonToggle.Text = "ROUND BUTTONS: HIDDEN (LOCKED)"; UIButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50)
+            UIButtonToggle.Text = "ROUND BUTTONS: HIDDEN (LOCKED)"
+            UIButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50)
         end
     end)
 
-    -- 4. Toggle Button Drag Lock
-    local _G_CanDragButtons = true
+    -- 5. ボタンのサイズ変更ボタン (一括拡大縮小)
+    local currentScale = 1
+    local SizeButton = Instance.new("TextButton")
+    styleButton(SizeButton, "BUTTON SIZE: NORMAL", ACCENT_GOLD)
+    SizeButton.MouseButton1Click:Connect(function()
+        if currentScale == 1 then
+            currentScale = 0.8
+            SizeButton.Text = "BUTTON SIZE: SMALL"
+        elseif currentScale == 0.8 then
+            currentScale = 1.2
+            SizeButton.Text = "BUTTON SIZE: LARGE"
+        else
+            currentScale = 1
+            SizeButton.Text = "BUTTON SIZE: NORMAL"
+        end
+        
+        for _, child in ipairs(IslandDropDown:GetChildren()) do
+            if child:IsA("GuiObject") and child.Name ~= "UIListLayout" then
+                child.Size = UDim2.new(0, 50 * currentScale, 0, 50 * currentScale)
+            end
+        end
+    end)
+
+    -- 6. 現在ドラッグ可能かどうか変更可能なボタン
     local DragButtonToggle = Instance.new("TextButton")
     styleButton(DragButtonToggle, "BUTTON DRAGGING: ALLOWED", ACCENT_GOLD)
     DragButtonToggle.MouseButton1Click:Connect(function()
         _G_CanDragButtons = not _G_CanDragButtons
         if _G_CanDragButtons then
-            DragButtonToggle.Text = "BUTTON DRAGGING: ALLOWED"; DragButtonToggle.BorderColor3 = ACCENT_GOLD
+            DragButtonToggle.Text = "BUTTON DRAGGING: ALLOWED"
+            DragButtonToggle.BorderColor3 = ACCENT_GOLD
         else
-            DragButtonToggle.Text = "BUTTON DRAGGING: LOCKED"; DragButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50) end
+            DragButtonToggle.Text = "BUTTON DRAGGING: LOCKED"
+            DragButtonToggle.BorderColor3 = Color3.fromRGB(150, 50, 50)
+        end
     end)
 
-    -- 5. Speed Adjust TextBox
+    -- 7. 通常時スピード調節欄（テキストボックス）
     local SpeedInputFrame = Instance.new("Frame")
-    SpeedInputFrame.Size = UDim2.new(0.92, 0, 0, 32); SpeedInputFrame.BackgroundColor3 = BG_COLOR; SpeedInputFrame.BorderSizePixel = 0; SpeedInputFrame.Parent = MaintenanceFrame
+    SpeedInputFrame.Size = UDim2.new(0.92, 0, 0, 32)
+    SpeedInputFrame.BackgroundColor3 = BG_COLOR
+    SpeedInputFrame.BorderSizePixel = 0
+    SpeedInputFrame.Parent = MaintenanceFrame
     Instance.new("UICorner", SpeedInputFrame).CornerRadius = UDim.new(0, 4)
     
     local SpeedLabel = Instance.new("TextLabel")
-    SpeedLabel.Size = UDim2.new(0.6, 0, 1, 0); SpeedLabel.BackgroundTransparency = 1; SpeedLabel.Text = " WalkSpeed Adjust:"; SpeedLabel.TextColor3 = TEXT_WHITE; SpeedLabel.TextSize = 11; SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left; SpeedLabel.Font = Enum.Font.Gotham; SpeedLabel.Parent = SpeedInputFrame
+    SpeedLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    SpeedLabel.BackgroundTransparency = 1
+    SpeedLabel.Text = " Normal Speed Limit:"
+    SpeedLabel.TextColor3 = TEXT_WHITE
+    SpeedLabel.TextSize = 11
+    SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SpeedLabel.Font = Enum.Font.Gotham
+    SpeedLabel.Parent = SpeedInputFrame
     
     local SpeedBox = Instance.new("TextBox")
-    SpeedBox.Size = UDim2.new(0.35, 0, 0.8, 0); SpeedBox.Position = UDim2.new(0.6, 0, 0.1, 0); SpeedBox.BackgroundColor3 = FRAME_COLOR; SpeedBox.
+    SpeedBox.Size = UDim2.new(0.35, 0, 0.8, 0)
+    SpeedBox.Position = UDim2.new(0.6, 0, 0.1, 0)
+    SpeedBox.BackgroundColor3 = FRAME_COLOR
+    SpeedBox.Text = "59"
+    SpeedBox.TextColor3 = ACCENT_GOLD
+    SpeedBox.TextSize = 12
+    SpeedBox.Font = Enum.Font.GothamBold
+    SpeedBox.Parent = SpeedInputFrame
+    Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 4)
+    
+    SpeedBox.FocusLost:Connect(function(enterPressed)
+        local num = tonumber(SpeedBox.Text)
+        if num then _G.CustomNormalSpeed = math.clamp(num, 16, 62) end
+    end)
+
+    -- 8. 掴み時スピード調節欄（テキストボックス）
+    local CarryInputFrame = Instance.new("Frame")
+    CarryInputFrame.Size = UDim2.new(0.92, 0, 0, 32)
+    CarryInputFrame.BackgroundColor3 = BG_COLOR
+    CarryInputFrame.BorderSizePixel = 0
+    CarryInputFrame.Parent = MaintenanceFrame
+    Instance.new("UICorner", CarryInputFrame).CornerRadius = UDim.new(0, 4)
+    
+    local CarryLabel = Instance.new("TextLabel")
+    CarryLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    CarryLabel.BackgroundTransparency = 1
+    CarryLabel.Text = " Carry Speed Limit:"
+    CarryLabel.TextColor3 = TEXT_WHITE
+    CarryLabel.TextSize = 11
+    CarryLabel.TextXAlignment = Enum.TextXAlignment.Left
+    CarryLabel.Font = Enum.Font.Gotham
+    CarryLabel.Parent = CarryInputFrame
+    
+    local CarryBox = Instance.new("TextBox")
+    CarryBox.Size = UDim2.new(0.35, 0, 0.8, 0)
+    CarryBox.Position = UDim2.new(0.6, 0, 0.1, 0)
+    CarryBox.BackgroundColor3 = FRAME_COLOR
+    CarryBox.Text = "29"
+    CarryBox.TextColor3 = ACCENT_GOLD
+    CarryBox.TextSize = 12
+    CarryBox.Font = Enum.Font.GothamBold
+    CarryBox.Parent = CarryInputFrame
+    Instance.new("UICorner", CarryBox).CornerRadius = UDim.new(0, 4)
+    
+    CarryBox.FocusLost:Connect(function(enterPressed)
+        local num = tonumber(CarryBox.Text)
+        if num then _G.CustomCarrySpeed = math.clamp(num, 16, 62) end
+    end)
+
+    -- 9. 持ち時限定 急降下ダウンボタン
+    local FastDownButton = Instance.new("TextButton")
+    styleButton(FastDownButton, "CARRY DOWN: DISABLED", Color3.fromRGB(150, 50, 50))
+    
+    local isFastDownActive = false
+    FastDownButton.MouseButton1Click:Connect(function()
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and (typeof(speedMode) ~= "nil" and speedMode == false) then
+            isFastDownActive = not isFastDownActive
+            if isFastDownActive then
+                FastDownButton.Text = "CARRY DOWN: ACTIVE"
+                FastDownButton.BorderColor3 = ACCENT_GOLD
+                
+                task.spawn(function()
+                    while isFastDownActive do
+                        task.wait(0.1)
+                    end
+                end)
+            else
+                FastDownButton.Text = "CARRY DOWN: DISABLED"
+                FastDownButton.BorderColor3 = Color3.fromRGB(150, 50, 50)
+            end
+        else
+            FastDownButton.Text = "ERROR: NOT CARRYING ANYONE"
+            task.wait(1.5)
+            FastDownButton.Text = "CARRY DOWN: DISABLED"
+        end
+    end)
+
+    -- 制限速度監視の常時ループ
+    RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            local isSpeedOn = false
+            pcall(function()
+                if speedMode ~= nil then
+                    isSpeedOn = speedMode
+                end
+            end)
+
+            if isSpeedOn == true then
+                hum.WalkSpeed = _G.CustomNormalSpeed
+            else
+                hum.WalkSpeed = _G.CustomCarrySpeed
+            end
+        end
+    end)
+
+    -- 管理パネルの開閉アニメーション
+    local menuOpen = false
+    TopMenuButton.MouseButton1Click:Connect(function()
+        menuOpen = not menuOpen
+        local targetY = menuOpen and 45 or -350
+        TweenService:Create(MaintenanceFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -290, 0, targetY)}):Play()
+    end)
+
+    -- ドラッグ防止制御
+    IslandDropDown.InputBegan:Connect(function(input)
+        if not _G_CanDragButtons then
+            return
+        end
+    end)
+end)
